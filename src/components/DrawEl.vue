@@ -174,6 +174,15 @@ export default{
   
   data(){
     return {
+      // 加了toController_的，都是之后传给Controller时会用到的数据，与下面分离！
+      // ----- 睿睿
+      /* -------------------------------------------
+          orgs里面有peers[]，用数字表示这个org里面是哪几个peer。
+          这里的数字为全局的p_count
+       */
+      toController_orgs: {},
+      toController_channels: {},
+
       flag:1,
       peer_color:'red',
       org_color:'red',
@@ -255,6 +264,7 @@ export default{
     },
   },
   methods:{
+
     red_click(){
       this.peer_color='red';
       this.org_color='red';
@@ -285,6 +295,32 @@ export default{
       this.org_color='orange';
       this.app_color='orange';
     },
+
+    addOrg(){
+      let tempOrg = this.toController_orgs[this.org_color]
+      if (tempOrg.org_peercount!=0||tempOrg.org_orderercount!=0){
+        tempOrg.id = this.o_count;
+        tempOrg.name = this.org_color
+      }
+      else {
+        this.toController_orgs[this.org_color] = {
+          id: this.o_count,
+          name: this.org_color, // 用颜色区别名字
+          peers: {},
+          orderers: {},
+          org_peercount: 0,
+          org_orderercount: 0
+        }
+      }
+    },
+
+    addPeer(org){
+      let tempOrg = this.toController_orgs[org];
+      let index = tempOrg.org_peercount;
+      tempOrg.peers[index] = this.p_count;
+      tempOrg.org_peercount += 1;
+    },
+
     peer_click(){
       this.p_count++;
       var p = 'P' + this.p_count;
@@ -312,6 +348,7 @@ export default{
         top: 100
       })
       this.canvas.add(group);
+      this.addPeer(this.peer_color);
     },
     tri_click(){
       this.o_count++;
@@ -319,8 +356,6 @@ export default{
       var triangle = new fabric.Triangle({
         left:50,
         top:50,
-        // originX: 'center',
-        // originY: 'center',
         fill:this.org_color,
         width:50,
         height:45,
@@ -332,14 +367,13 @@ export default{
         fill: 'white',
         left:63,
         top:72
-        // originX: 'center',
-        // originY: 'center'
       });
       var group = new fabric.Group([triangle, text], {
         left: 100,
         top: 100
       })
       this.canvas.add(group);
+      this.addOrg();
     },
     app_click(){
       this.a_count++;
