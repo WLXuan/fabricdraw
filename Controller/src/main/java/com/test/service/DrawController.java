@@ -14,7 +14,6 @@ import java.util.Map;
 public class DrawController {
     @PostMapping("/download")
     public ResponseEntity<byte[]> download(@RequestBody Map<String, Object> args){
-
         return null;
     }
 }

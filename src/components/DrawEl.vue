@@ -297,10 +297,10 @@ export default{
     },
 
     addOrg(){
-      let tempOrg = this.toController_orgs[this.org_color]
+      let tempOrg = this.toController_orgs[this.org_color];
       if (tempOrg.org_peercount!=0||tempOrg.org_orderercount!=0){
         tempOrg.id = this.o_count;
-        tempOrg.name = this.org_color
+        tempOrg.name = this.org_color;
       }
       else {
         this.toController_orgs[this.org_color] = {
@@ -319,6 +319,28 @@ export default{
       let index = tempOrg.org_peercount;
       tempOrg.peers[index] = this.p_count;
       tempOrg.org_peercount += 1;
+    },
+
+    download(){
+      let temp = this;
+      this.$axios({
+        method: 'POST', //要下载的压缩包需要先上传上去
+        url: '/download',
+        data: {
+          orgs: this.qs.stringify(temp.toController_orgs),
+          channels: this.qs.stringify(temp.toController_channels),
+        },
+        responseType: 'blob'
+      }).then(response => { //后台返回的文件流直接放在response里
+        const blob = new Blob([response.data], {type:'application/zip'})
+        const url = window.URL.createObjectURL(blob)
+        let link = document.createElement('a') //用a标签实现下载
+        link.href = url
+        link.style.display = 'none'
+        link.setAttribute('download', 'fabric-draw.zip')
+        document.body.appendChild(link)
+        link.click()
+      })
     },
 
     peer_click(){
