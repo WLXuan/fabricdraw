@@ -327,8 +327,8 @@ export default{
         method: 'POST', //要下载的压缩包需要先上传上去
         url: '/download',
         data: {
-          orgs: this.qs.stringify(temp.toController_orgs),
-          channels: this.qs.stringify(temp.toController_channels),
+          jsonOrgs: JSON.stringify(temp.toController_orgs),
+          jsonChannels: JSON.stringify(temp.toController_channels),
         },
         responseType: 'blob'
       }).then(response => { //后台返回的文件流直接放在response里
