@@ -37,8 +37,11 @@
           <div @click="loadExpImg" title="加载背景图">
             <i class="draw-icon icon-back"></i>
           </div>
-          <div @click="save" title="保存">
+          <div @click="save" title="保存图片">
             <i class="draw-icon icon-save"></i>
+          </div>
+          <div @click="download" title="保存zip文件">
+            <i class="draw-icon icon-zip"></i>
           </div>
         </div>
       </div>
@@ -53,6 +56,7 @@ export default {
   name: "Draw",
   data() {
     return {
+
       width: 1280,
       height: 620,
       rect: [],
@@ -95,6 +99,30 @@ export default {
     },
   },
   methods: {
+    // 下载zip文件
+    download(){
+      let temp = this;
+      this.$axios({
+        method: 'POST', //要下载的压缩包需要先上传上去
+        url: '/download',
+        data: {
+          jsonOrgs: JSON.stringify(temp.toController_orgs),
+          jsonChannels: JSON.stringify(temp.toController_channels),
+        },
+        responseType: 'blob'
+      }).then(response => { //后台返回的文件流直接放在response里
+        console.log(response)
+        const blob = new Blob([response.data], {type:'application/zip'})
+        const url = window.URL.createObjectURL(blob)
+        let link = document.createElement('a') //用a标签实现下载
+        link.href = url
+        link.style.display = 'none'
+        link.setAttribute('download', 'fabric-draw.zip')
+        document.body.appendChild(link)
+        link.click()
+      })
+    },
+
     // 保存当前画布为png图片
     save() {
       var canvas = document.getElementById('canvas')
@@ -669,6 +697,10 @@ canvas {
     }
     .icon-save {
       background-image: url("../assets/icons/draw/save.png");
+      background-size: 80%;
+    }
+    .icon-zip {
+      background-image: url("../assets/icons/draw/zip.png");
       background-size: 80%;
     }
     .icon-mouse {
