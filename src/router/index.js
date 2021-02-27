@@ -2,13 +2,15 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Draw from '../components/Draw.vue'
 import DE from '../components/DrawEl'
+import DrawEl from "@/components/DrawEl";
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    component: DE
+    name: 'DrawEl',
+    component: DrawEl
   },
 
 ]

@@ -111,11 +111,11 @@
                   <div @click="uploadImg" title="从文件选择图片上传">
                     <i class="draw-icon icon-img"></i>
                   </div>
-<!--                  <div @click="loadExpImg" title="加载背景图">-->
-<!--                    <i class="draw-icon icon-back"></i>-->
-<!--                  </div>-->
                   <div @click="save" title="保存">
                     <i class="draw-icon icon-save"></i>
+                  </div>
+                  <div @click="download" title="保存zip文件">
+                    <i class="draw-icon icon-zip"></i>
                   </div>
                 </div>
               </div>
@@ -180,6 +180,44 @@ export default{
           orgs里面有peers[]，用数字表示这个org里面是哪几个peer。
           这里的数字为全局的p_count
        */
+      all_orgs: {
+        red:{
+          org_peercount: 0,
+          org_ordercount: 0,
+          peers: {},
+          orderers: {}
+        },
+        blue:{
+          org_peercount: 0,
+          org_ordercount: 0,
+          peers: {},
+          orderers: {}
+        },
+        darkgreen:{
+          org_peercount: 0,
+          org_ordercount: 0,
+          peers: {},
+          orderers: {}
+        },
+        gold:{
+          org_peercount: 0,
+          org_ordercount: 0,
+          peers: {},
+          orderers: {}
+        },
+        purple:{
+          org_peercount: 0,
+          org_ordercount: 0,
+          peers: {},
+          orderers: {}
+        },
+        orange:{
+          org_peercount: 0,
+          org_ordercount: 0,
+          peers: {},
+          orderers: {}
+        }
+      },
       toController_orgs: {},
       toController_channels: {},
 
@@ -297,50 +335,28 @@ export default{
     },
 
     addOrg(){
-      let tempOrg = this.toController_orgs[this.org_color];
-      if (tempOrg.org_peercount!=0||tempOrg.org_orderercount!=0){
-        tempOrg.id = this.o_count;
-        tempOrg.name = this.org_color;
-      }
-      else {
-        this.toController_orgs[this.org_color] = {
-          id: this.o_count,
-          name: this.org_color, // 用颜色区别名字
-          peers: {},
-          orderers: {},
-          org_peercount: 0,
-          org_orderercount: 0
-        }
+      let tempOrg = this.all_orgs[this.org_color];
+      this.toController_orgs[this.org_color] = {
+        id: this.o_count,
+        name: this.org_color,
+        peers: tempOrg.peers,
+        orderers: tempOrg.orderers,
+        org_peercount: tempOrg.peers.count,
+        org_orderercount: tempOrg.orderers.count
       }
     },
 
     addPeer(org){
-      let tempOrg = this.toController_orgs[org];
+      let tempOrg = '';
+      if(this.toController_orgs[org]){
+        tempOrg = this.toController_orgs[org];
+      }
+      else{
+        tempOrg = this.all_orgs[org];
+      }
       let index = tempOrg.org_peercount;
       tempOrg.peers[index] = this.p_count;
       tempOrg.org_peercount += 1;
-    },
-
-    download(){
-      let temp = this;
-      this.$axios({
-        method: 'POST', //要下载的压缩包需要先上传上去
-        url: '/download',
-        data: {
-          jsonOrgs: JSON.stringify(temp.toController_orgs),
-          jsonChannels: JSON.stringify(temp.toController_channels),
-        },
-        responseType: 'blob'
-      }).then(response => { //后台返回的文件流直接放在response里
-        const blob = new Blob([response.data], {type:'application/zip'})
-        const url = window.URL.createObjectURL(blob)
-        let link = document.createElement('a') //用a标签实现下载
-        link.href = url
-        link.style.display = 'none'
-        link.setAttribute('download', 'fabric-draw.zip')
-        document.body.appendChild(link)
-        link.click()
-      })
     },
 
     peer_click(){
@@ -424,6 +440,32 @@ export default{
         top: 100
       })
       this.canvas.add(group);
+    },
+
+    // 下载zip文件
+    download(){
+      let temp = this
+      // let instance = this.$axios.create()
+      // instance.defaults.headers.post['Content-Type'] = 'application/json'
+      this.$axios({
+        method: 'POST',
+        url: '/download',
+        data: {
+          jsonOrgs: JSON.stringify(temp.toController_orgs),
+          jsonChannels: JSON.stringify(temp.toController_channels)
+        },
+        responseType: 'blob'
+      }).then(response => {      // 后台返回的文件流直接放在response里
+            console.log(response)
+            const blob = new Blob([response.data])
+            const url = window.URL.createObjectURL(blob)
+            let link = document.createElement('a')     // 用a标签实现下载
+            link.href = url
+            link.style.display = 'none'
+            link.setAttribute('download', 'fabric-draw.zip')
+            document.body.appendChild(link)
+            link.click()
+          })
     },
 
     // 保存当前画布为png图片
@@ -1120,53 +1162,57 @@ i {
   height: 30px;
   width: 30px;
 }
-.icon-1 {
-  background-image: url("../assets/icons/draw/1.png");
-}
-.icon-pentagram {
+  .icon-1 {
+    background-image: url("../assets/icons/draw/1.png");
+  }
+  .icon-pentagram {
   background-image: url("../assets/icons/draw/pentagram.png");
-}
-.icon-2 {
-  background-image: url("../assets/icons/draw/2.png");
-}
-.icon-3 {
-  background-image: url("../assets/icons/draw/3.png");
-}
-.icon-4 {
-  background-image: url("../assets/icons/draw/4.png");
-  background-size: 75%;
-}
-.icon-5 {
-  background-image: url("../assets/icons/draw/5.png");
-  background-size: 70%;
-}
-.icon-6 {
-  background-image: url("../assets/icons/draw/6.png");
-}
-.icon-7 {
-  background-image: url("../assets/icons/draw/7.png");
-  background-size: 80%;
-}
-.icon-del {
-  background-image: url("../assets/icons/draw/del.png");
-  background-size: 90%;
-}
-.icon-img {
-  background-image: url("../assets/icons/draw/img.png");
-  background-size: 80%;
-}
-.icon-back {
-  background-image: url("../assets/icons/draw/back.png");
-  background-size: 75%;
-}
-.icon-save {
-  background-image: url("../assets/icons/draw/save.png");
-  background-size: 80%;
-}
-.icon-mouse {
-  background-image: url("../assets/icons/draw/mouse.png");
-  background-size: 60%;
-}
+  }
+  .icon-2 {
+   background-image: url("../assets/icons/draw/2.png");
+  }
+  .icon-3 {
+    background-image: url("../assets/icons/draw/3.png");
+  }
+  .icon-4 {
+    background-image: url("../assets/icons/draw/4.png");
+    background-size: 75%;
+  }
+  .icon-5 {
+    background-image: url("../assets/icons/draw/5.png");
+    background-size: 70%;
+  }
+  .icon-6 {
+    background-image: url("../assets/icons/draw/6.png");
+  }
+  .icon-7 {
+    background-image: url("../assets/icons/draw/7.png");
+    background-size: 80%;
+  }
+  .icon-del {
+    background-image: url("../assets/icons/draw/del.png");
+    background-size: 90%;
+  }
+  .icon-img {
+    background-image: url("../assets/icons/draw/img.png");
+    background-size: 80%;
+  }
+  .icon-back {
+    background-image: url("../assets/icons/draw/back.png");
+    background-size: 75%;
+  }
+  .icon-save {
+    background-image: url("../assets/icons/draw/save.png");
+    background-size: 80%;
+  }
+  .icon-zip {
+    background-image: url("../assets/icons/draw/zip.png");
+    background-size: 72%;
+  }
+  .icon-mouse {
+    background-image: url("../assets/icons/draw/mouse.png");
+    background-size: 60%;
+  }
 }
 .active {
   background: #eee;

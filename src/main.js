@@ -6,13 +6,23 @@ import './plugins/bootstrap-vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import axios from 'axios'
-import VueAxios from 'vue-axios'
 import BootstrapVue from 'bootstrap-vue'
 import fabric from 'fabric'
-Vue.use(VueAxios, axios)
-Vue.prototype.$axios = axios
+
 Vue.use(fabric)
+
+import axios from 'axios'
+// axios.defaults.baseURL = 'http://localhost:8080'
+// axios.defaults.headers.post['Content-Type'] = 'application/json'
+Vue.prototype.$axios = axios.create({
+  baseURL: 'http://localhost:8080',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+import VueAxios from 'vue-axios'
+Vue.use(VueAxios)
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
