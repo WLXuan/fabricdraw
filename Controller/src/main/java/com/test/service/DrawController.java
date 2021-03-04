@@ -14,10 +14,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -44,9 +41,10 @@ public class DrawController {
         fileList.add(BASE + "configtx.yaml");
         // fileList.add(BASE + "crypto-config.yaml");
         fileList.add(BASE + "build_env.sh");
+        fileList.add(BASE + "docker-compose-ca.yaml");
         fileList.add(BASE + "docker-compose-cli.yaml");
         fileList.add(BASE + "setup.sh");
-        fileList.add(BASE + "docker-compose-ca.yaml");
+
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
@@ -56,15 +54,15 @@ public class DrawController {
             // 遍历所有文件
             for (int i = 0; i < fileList.size(); i++) {
                 File file = new File(fileList.get(i));
-                FileInputStream in = new FileInputStream(file);
                 Long filelength = file.length();
                 byte[] fileContent = new byte[filelength.intValue()];
-                in.read(fileContent);
+                FileInputStream in = new FileInputStream(file);
                 out.putNextEntry(new ZipEntry(file.getName()));
+                in.read(fileContent);
                 String strContent = new String(fileContent, "utf-8");
 
                 // 配置docker-compose-ca.yaml
-                if (fileList.get(i).endsWith("docker-compose-ca.yaml")) {
+                if (file.getName().equals("docker-compose-ca.yaml")) {
                     File caFile = new File(BASE + "/template/ca-template.yaml");
                     FileInputStream caIn = new FileInputStream(caFile);
                     filelength = caFile.length();
@@ -74,13 +72,15 @@ public class DrawController {
                     strContent = strContent.replace("{{DOMAIN_NETWORK}}", "test");
                     int port = 7;
                     // 遍历所有组织
+                    List values = new ArrayList<>(orgJson.values());
                     for (int index = 0; index < orgJson.size(); index++, port++) {
-                        JsonObject org = orgJson.getJsonObject(String.valueOf(index));
-                        String partStrContent = caStrContent.replace("{{DOMAIN_NAME}}", org.getString("id"));
+                        JsonObject org = (JsonObject) values.get(index);
+                        String partStrContent = caStrContent.replace("{{DOMAIN_NAME}}", String.valueOf(org.get("id")));
                         partStrContent = partStrContent.replace("{{DOMAIN_NETWORK}}", "test");
                         partStrContent = partStrContent.replace("{{ORG_NAME}}", org.getString("name"));
                         partStrContent = partStrContent.replace("{{OUT_PORT}}", port + "054");
                         strContent += partStrContent;
+//                        System.out.println(strContent);
                     }
                     out.write(strContent.getBytes());
                     caIn.close();
@@ -96,14 +96,16 @@ public class DrawController {
                     String ordererStrContent = new String(ordererContent, "utf-8");
                     strContent = strContent.replace("{{DOMAIN_NETWORK}}", "test");
                     int index = 0;
-                    JsonObject org = orgJson.getJsonObject(String.valueOf(index));
+                    List values = new ArrayList<>(orgJson.values());
+//                    JsonObject org = orgJson.getJsonObject(String.valueOf(index));
                     String partStrContent = "";
+                    JsonObject org = (JsonObject) values.get(index);
                     int port = 7;
                     // 创建排序节点
-                    createCommand += "create_orderer_org " + org.getString("name") + " " + org.getString("id") + " 7054\r\n";
+                    createCommand += "create_orderer_org " + org.getString("name") + " " + org.get("id") + " 7054\r\n";
                     // 遍历所有节点
                     for (String key : org.getJsonObject("orderers").keySet()) {
-                        partStrContent = ordererStrContent.replace("{{DOMAIN_NAME}}", org.getString("id"));
+                        partStrContent = ordererStrContent.replace("{{DOMAIN_NAME}}", String.valueOf(org.get("id")));
                         partStrContent = partStrContent.replace("{{DOMAIN_NETWORK}}", "test");
                         partStrContent = partStrContent.replace("{{ORG_MSP}}", toUpperCaseFirstOne(org.getString("name")) + "MSP");
                         partStrContent = partStrContent.replace("{{PEER_NAME}}", org.getJsonObject("orderers").getString(key));
@@ -111,6 +113,7 @@ public class DrawController {
                         port++;
                         strContent += partStrContent;
                         createCommand += "create_orderer " + org.getJsonObject("orderers").getString(key) + " " + org.getString("id") + " 7054\r\n";
+                        System.out.println(createCommand + "这是一次");
                     }
                     // 创建peer
                     File peerFile = new File(BASE + "/template/peer-template.yaml");
@@ -121,18 +124,19 @@ public class DrawController {
                     String peerStrContent = new String(peerContent, "utf-8");
                     port = 7;
                     for (index = 1; index < orgJson.size(); index++) {
-                        createCommand += "create_org " + org.getString("name") + " " + org.getString("id") + " " + (7 + index) + "054\r\n";
-                        org = orgJson.getJsonObject(String.valueOf(index));
+                        createCommand += "create_org " + org.getString("name") + " " + org.get("id") + " " + (7 + index) + "054\r\n";
+//                        org = orgJson.getJsonObject(String.valueOf(index));
+                        org = (JsonObject) values.get(index);
                         for (String key : org.getJsonObject("peers").keySet()) {
-                            partStrContent = peerStrContent.replace("{{DOMAIN_NAME}}", org.getString("id"));
+                            partStrContent = peerStrContent.replace("{{DOMAIN_NAME}}", String.valueOf(org.get("id")));
                             partStrContent = partStrContent.replace("{{DOMAIN_NETWORK}}", "test");
                             partStrContent = partStrContent.replace("{{ORG_MSP}}", toUpperCaseFirstOne(org.getString("name")) + "MSP");
                             partStrContent = partStrContent.replace("{{ORG_NAME}}", org.getString("name"));
-                            partStrContent = partStrContent.replace("{{PEER_NAME}}", org.getJsonObject("peers").getString(key));
+                            partStrContent = partStrContent.replace("{{PEER_NAME}}", String.valueOf(org.getJsonObject("peers").get(key)));
                             partStrContent = partStrContent.replace("{{OUT_PORT}}", port + "051");
                             port++;
                             strContent += partStrContent;
-                            createCommand += "create_peer " + org.getString("name") + " " + org.getJsonObject("peers").getString(key) + " " + org.getString("domain") + " " + (7 + index) + "054\r\n";
+                            createCommand += "create_peer " + org.getString("name") + " " + String.valueOf(org.getJsonObject("peers").get(key)) + " " +  String.valueOf(org.get("id")) + " " + (7 + index) + "054\r\n";
                         }
                     }
                     // 创建cli
@@ -163,6 +167,8 @@ public class DrawController {
                 out.closeEntry();
                 in.close();
             }
+            System.out.println(out);
+            out.flush();
             out.close();
             bos.close();
         }catch (Exception e){
@@ -170,7 +176,8 @@ public class DrawController {
         }
 
         HttpHeaders header = new HttpHeaders();
-        header.add("Content-Disposition", "attachment;filename=fabbric.zip");
+        header.add("Content-Disposition", "attachment;filename=fabric.zip");
+        System.out.println("111");
         return new ResponseEntity<byte[]>(bos.toByteArray(), header, HttpStatus.CREATED);
     }
 
