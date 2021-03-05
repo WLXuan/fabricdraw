@@ -38,8 +38,8 @@
           <el-button type="primary" round style="margin-top: 35px" @click="drawTypeChange('ellipse')">Channel</el-button>
           <el-button type="primary" round style="margin-top: 35px" @click="drawTypeChange('rectangle')">Blockchain Network</el-button>
           <el-button type="primary" round style="margin-top: 35px" @click="drawTypeChange('line')">PA</el-button>
-          <el-button type="primary" round style="margin-top: 20px" @click="app_click">Application</el-button>
-          <el-button type="primary" round style="margin-top: 20px" @click="drawPolygon">Ledger</el-button>
+          <el-button type="primary" round style="margin-top: 35px" @click="app_click">Application</el-button>
+          <el-button type="primary" round style="margin-top: 35px" @click="orderer_click">Orderer</el-button>
           <!--          <el-menu :default-openeds="['1', '3']" style="background-color: #292929" text-color="#fff">-->
           <!--            <el-submenu index="1" style="background-color: #292929">-->
           <!--              <template slot="title"><i class="el-icon-message"></i>图形</template>-->
@@ -225,9 +225,11 @@ export default{
       peer_color:'red',
       org_color:'red',
       app_color:'red',
+      ord_color:'red',
       o_count:0,
       p_count:0,
       a_count:0,
+      ord_count:0,
       pic: 'pic0',
       org: 'org0',
       app: 'app0',
@@ -307,31 +309,37 @@ export default{
       this.peer_color='red';
       this.org_color='red';
       this.app_color='red';
+      this.ord_color='red';
     },
     blue_click(){
       this.peer_color='blue';
       this.org_color='blue';
       this.app_color='blue';
+      this.ord_color='blue';
     },
     green_click(){
       this.peer_color='darkgreen';
       this.org_color='darkgreen';
       this.app_color='darkgreen';
+      this.ord_color='darkgreen';
     },
     yellow_click(){
       this.peer_color='gold';
       this.org_color='gold';
       this.app_color='gold';
+      this.ord_color='gold';
     },
     purple_click(){
       this.peer_color='purple';
       this.org_color='purple';
       this.app_color='purple';
+      this.ord_color='purple';
     },
     orange_click(){
       this.peer_color='orange';
       this.org_color='orange';
       this.app_color='orange';
+      this.ord_color='orange';
     },
 
     addOrg(){
@@ -358,6 +366,7 @@ export default{
       tempOrg.peers[index] = this.p_count;
       tempOrg.org_peercount += 1;
     },
+    addOrd(org){},
 
     peer_click(){
       this.p_count++;
@@ -387,6 +396,35 @@ export default{
       })
       this.canvas.add(group);
       this.addPeer(this.peer_color);
+    },
+    orderer_click(){
+      this.ord_count++;
+      var ord = 'Ord' + this.ord_count;
+      var rect = new fabric.Rect({
+        // left:100,//距离画布左侧的距离，单位是像素
+        // top:100,//距离画布上边的距离
+        originX: 'center',
+        originY: 'center',
+        fill:this.ord_color,//填充的颜色
+        width:50,//方形的宽度
+        height:50,//方形的高度
+        rx:8,
+        ry:8,
+        stroke:'#336699',
+        strokeWidth:2
+      });
+      var text = new fabric.Text(ord,{
+        fontSize: 25,
+        fill:'white',
+        originX: 'center',
+        originY: 'center'
+      });
+      var group = new fabric.Group([rect, text], {
+        left: 150,
+        top: 100
+      })
+      this.canvas.add(group);
+      this.addOrd(this.ord_color);
     },
     tri_click(){
       this.o_count++;
